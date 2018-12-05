@@ -23,7 +23,7 @@ $config = [
 $http = new Swoole\Http\Server('0.0.0.0', 9501);
 $http->set([
 //    'daemonize'=>true,
-    'worker_num' => 2,
+    'worker_num' => 1,
     'log_level' => 0,
 ]);
 
@@ -61,7 +61,7 @@ $http->on('request', function($request, $response){
                     //好处是:可能因为业务代码很长, 导致乱用或者忘记把资源归还
                     MysqlPool::getInstance()->put($mysql);
                     //todo
-                    echo "pid->".posix_getpid()."当前可用链接数: ".MysqlPool::getInstance()->getLength().PHP_EOL;
+                    echo "defer: list pid->".posix_getpid()."当前可用链接数: ".MysqlPool::getInstance()->getLength().PHP_EOL;
                 });
 
                 $result = $mysql->query('select * from groups');
@@ -87,10 +87,11 @@ $http->on('request', function($request, $response){
                 defer(function () use ($mysql) {
                     //协程执行完成，归还$mysql到连接池
                     MysqlPool::getInstance()->put($mysql);
-                    echo "pid->".posix_getpid()."当前可用连接数：" . MysqlPool::getInstance()->getLength() . PHP_EOL;
+                    echo "defer: timeout pid->".posix_getpid()."当前可用连接数：" . MysqlPool::getInstance()->getLength() . PHP_EOL;
                 });
                 $result = $mysql->query("select * from test");
                 \Swoole\Coroutine::sleep(30); //sleep 10秒,模拟耗时操作
+//                sleep(30);
                 $response->end(json_encode($result));
             } catch (\Exception $e) {
                 $response->end($e->getMessage().'--'.$e->getLine());
