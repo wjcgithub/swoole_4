@@ -12,3 +12,4 @@
 /app/Config/database.php
 /vendors/*
 /ide-helper/*
+/.idea/*
